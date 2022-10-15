@@ -1,29 +1,49 @@
-import { createMemo, createResource, For, Show, Suspense } from "solid-js";
-import { A, createRouteData, RouteDataArgs, useSearchParams } from "solid-start";
+import { createMemo, For, Show, Suspense } from "solid-js";
+import { A, createRouteData, RouteDataArgs, useRouteData, useSearchParams } from "solid-start";
 import Page from "~/components/Page";
 import { useSession } from "~/session";
 import { api } from "../realworlddemo"
 import { formatDateString } from "../dates"
+import { useRouter } from "solid-start/islands/server-router";
+
 
 type ArticleSource = 'feed' | 'global'
 
-type ArticleSelection = {
-  source: ArticleSource,
-  page: number,
-  tag: string | null
-}
-
 const articlesPerPage = 10
 
-async function fetchArticles(selection: ArticleSelection) {
-  const offset = (selection.page - 1) * articlesPerPage
+async function fetchArticleData(query) {
+  console.log(`fetching data with: ${JSON.stringify(query)}`)
+  const source: ArticleSource = query.source !== undefined && query.source === 'feed'
+    ? 'feed'
+    : 'global'
+
+  const page: number = query.page === undefined
+    ? 1
+    : isNaN(parseInt(query.page))
+      ? 1
+      : Math.max(1, parseInt(query.page))
+
+  const tag: string | null = source !== 'feed' && query.tag !== undefined
+    ? query.tag
+    : null
+
+  const offset = (page - 1) * articlesPerPage
+
+  console.log(`source: ${source} page: ${page} tag: ${tag} offset: ${offset}`)
+
   const response =
-    selection.source === 'feed'
+    source === 'feed'
       ? await api.articles.getArticlesFeed({ limit: articlesPerPage, offset })
-      : selection.source === 'global' && selection.tag === null
+      : source === 'global' && tag === null
         ? await api.articles.getArticles({ limit: articlesPerPage, offset })
-        : await api.articles.getArticles({ tag: selection.tag, limit: articlesPerPage, offset })
-  return response.data;
+        : await api.articles.getArticles({ tag, limit: articlesPerPage, offset })
+  return {
+    articles: response.data.articles,
+    articlesCount: response.data.articlesCount,
+    source,
+    page,
+    tag
+  };
 }
 
 async function fetchTags() {
@@ -32,57 +52,31 @@ async function fetchTags() {
 }
 
 export function routeData(args: RouteDataArgs) {
-  console.log(`in routeData ${JSON.stringify(args)}`)
-  return createRouteData(async () => {
-    const waitFor = delay => new Promise(resolve => {
-      console.log(`in waitfor ${JSON.stringify(args)}`)
-      setTimeout(() => resolve([]), delay)
-    });
-    return await waitFor(500);
+  // const [searchParams] = useSearchParams();
+
+  const articleData = createRouteData(fetchArticleData, {
+    key: () => {
+      console.log(`key accessed: ${JSON.stringify(args.location.query)}`);
+      return args.location.query;
+    }
   });
+
+  const tags = createRouteData(fetchTags)
+
+  return { articleData, tags }
 }
 
 export default function Home() {
-  const [searchParams] = useSearchParams();
+  const { articleData, tags } = useRouteData<typeof routeData>();
 
-  const source = createMemo(() => {
-    return searchParams.source === undefined
-      ? 'global'
-      : searchParams.source === 'feed'
-        ? 'feed'
-        : 'global'
-  })
+  const articles = createMemo(() => articleData() ? articleData().articles : [])
 
-  const page = createMemo(() => {
-    return searchParams.page === undefined
-      ? 1
-      : isNaN(parseInt(searchParams.page))
-        ? 1
-        : parseInt(searchParams.page)
-  })
-
-  const tag = createMemo(() => {
-    return searchParams.tag === undefined
-      ? null
-      : searchParams.source !== undefined && searchParams.source === 'feed'
-        ? null
-        : searchParams.tag
-  })
-
-  const selection = createMemo(() => {
-    return {
-      source: source(),
-      page: page(),
-      tag: tag()
-    }
-  })
-
-  const [data] = createResource(selection, fetchArticles)
-  const [tags] = createResource(fetchTags)
-  const articles = createMemo(() => data() ? data().articles : [])
+  const source = createMemo(() => articleData() ? articleData().source : 'global')
+  const page = createMemo(() => articleData() ? articleData().page : 1)
+  const tag = createMemo(() => articleData() ? articleData().tag : null)
 
   const pageNums = createMemo(() => {
-    const pageCount = data() ? Math.ceil(data().articlesCount / articlesPerPage) : 0
+    const pageCount = articleData() ? Math.ceil(articleData().articlesCount / articlesPerPage) : 0
     return pageCount === 0 ? [] : [...Array(pageCount).keys()].map(i => i + 1)
   })
 
@@ -164,7 +158,7 @@ export default function Home() {
                           "page-item ng-scope": true,
                           "active": page() === pageNum
                         }} >
-                          <A class="page-link" href={pageHref(pageNum)}>{pageNum}</A>
+                          <a class="page-link" href={pageHref(pageNum)}>{pageNum}</a>
                         </li>
                       )}
                     </For>
