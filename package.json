@@ -1,0 +1,26 @@
+{
+  "name": "realworld-solidstart",
+  "scripts": {
+    "dev": "solid-start dev",
+    "build": "solid-start build",
+    "start": "solid-start start",
+    "genapi": "cd src/generated ; pnpm dlx swagger-typescript-api -p https://raw.githubusercontent.com/gothinkster/realworld/db2aef2c70e1be92524572d63269c3fc4d6d8a16/api/openapi.yml"
+  },
+  "type": "module",
+  "devDependencies": {
+    "solid-start-node": "^0.1.0",
+    "typescript": "^4.8.3",
+    "vite": "^3.1.8"
+  },
+  "dependencies": {
+    "@solidjs/meta": "^0.28.0",
+    "@solidjs/router": "^0.5.0",
+    "date-fns": "^2.29.3",
+    "solid-js": "^1.5.7",
+    "solid-start": "^0.1.0",
+    "undici": "^5.10.0"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
