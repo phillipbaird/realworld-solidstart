@@ -1,5 +1,5 @@
 import { createMemo, createResource, For, Show, Suspense } from "solid-js";
-import { A, createRouteData, RouteDataArgs, useSearchParams } from "solid-start";
+import { A, useSearchParams } from "solid-start";
 import Page from "~/components/Page";
 import { useSession } from "~/session";
 import { api } from "../realworlddemo"
@@ -31,16 +31,6 @@ async function fetchTags() {
   return response.data.tags;
 }
 
-export function routeData(args: RouteDataArgs) {
-  console.log(`in routeData ${JSON.stringify(args)}`)
-  return createRouteData(async () => {
-    const waitFor = delay => new Promise(resolve => {
-      console.log(`in waitfor ${JSON.stringify(args)}`)
-      setTimeout(() => resolve([]), delay)
-    });
-    return await waitFor(500);
-  });
-}
 
 export default function Home() {
   const [searchParams] = useSearchParams();
