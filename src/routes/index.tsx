@@ -4,15 +4,13 @@ import Page from "~/components/Page";
 import { useSession } from "~/session";
 import { api } from "../realworlddemo"
 import { formatDateString } from "../dates"
-import { useRouter } from "solid-start/islands/server-router";
-
+import { createServerData$ } from "solid-start/server";
 
 type ArticleSource = 'feed' | 'global'
 
 const articlesPerPage = 10
 
 async function fetchArticleData(query) {
-  console.log(`fetching data with: ${JSON.stringify(query)}`)
   const source: ArticleSource = query.source !== undefined && query.source === 'feed'
     ? 'feed'
     : 'global'
@@ -29,7 +27,7 @@ async function fetchArticleData(query) {
 
   const offset = (page - 1) * articlesPerPage
 
-  console.log(`source: ${source} page: ${page} tag: ${tag} offset: ${offset}`)
+  console.log(`fetchArticleData(..): source = ${source}, page = ${page}, tag = ${tag}, offset = ${offset}`)
 
   const response =
     source === 'feed'
@@ -51,13 +49,13 @@ async function fetchTags() {
   return response.data.tags;
 }
 
-export function routeData(args: RouteDataArgs) {
-  // const [searchParams] = useSearchParams();
+export function routeData() {
+  const [searchParams] = useSearchParams();
 
   const articleData = createRouteData(fetchArticleData, {
     key: () => {
-      console.log(`key accessed: ${JSON.stringify(args.location.query)}`);
-      return args.location.query;
+      console.log(`routeData(): searchParams = ${JSON.stringify(searchParams)}`);
+      return searchParams;
     }
   });
 
@@ -158,7 +156,7 @@ export default function Home() {
                           "page-item ng-scope": true,
                           "active": page() === pageNum
                         }} >
-                          <a class="page-link" href={pageHref(pageNum)}>{pageNum}</a>
+                          <A class="page-link" href={pageHref(pageNum)}>{pageNum}</A>
                         </li>
                       )}
                     </For>
