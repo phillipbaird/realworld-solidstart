@@ -1,30 +1,13 @@
-# SolidStart
+# RealWorld client made with Solid Start
 
-Everything you need to build a Solid project, powered by [`solid-start`](https://github.com/ryansolid/solid-start/tree/master/packages/solid-start);
+An experiment in creating a [RealWorld](https://realworld-docs.netlify.app) client powered by [Solid Start](https://start.solidjs.com).
 
-## Creating a project
-
-```bash
-# create a new project in the current directory
-npm init solid
-
-# create a new project in my-app
-npm init solid my-app
-```
+**Solid Start is in beta so this is very much a work in progress.**
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Install dependencies with `pnpm install`.
 
-```bash
-npm run dev
+Start a dev server with `pnpm dev`.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-Solid apps are built with _adapters_, which optimise your project for deployment to different environments.
-
-By default, `npm run build` will generate a Node app that you can run with `npm start`. To use a different adapter, add it to the `devDependencies` in `package.json` and specify in your `vite.config.js`.
+If for any reason you want to regenerate the api source from the OpenAPI definition then use `pnpm genapi`.
